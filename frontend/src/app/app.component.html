@@ -1,0 +1,55 @@
+<header class="hero">
+  <div class="hero-content">
+    <p class="eyebrow">BOOKFLOW · LIBRARY OPERATIONS</p>
+    <h1>Library inventory & lending</h1>
+    <p class="subtitle">A portfolio demo for catalog management, loans, and returns.</p>
+  </div>
+  <div class="hero-stat"><span>{{ books.length }}</span><small>Titles in catalog</small></div>
+</header>
+
+<main class="page">
+  <div class="notice" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <p class="loading" *ngIf="isLoading">Loading library data…</p>
+
+  <section class="grid-two">
+    <article class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">CATALOG</p><h2>Register a book</h2></div><span class="step">01</span></div>
+      <form (ngSubmit)="createBook()">
+        <label>Title<input name="title" [(ngModel)]="bookForm.title" required maxlength="200" /></label>
+        <label>Author<input name="author" [(ngModel)]="bookForm.author" required maxlength="160" /></label>
+        <label>ISBN<input name="isbn" [(ngModel)]="bookForm.isbn" required maxlength="32" /></label>
+        <label>Total copies<input type="number" name="totalCopies" [(ngModel)]="bookForm.totalCopies" required min="1" /></label>
+        <button type="submit">Add book</button>
+      </form>
+    </article>
+
+    <article class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">CHECKOUT</p><h2>Create a loan</h2></div><span class="step">02</span></div>
+      <form (ngSubmit)="createLoan()">
+        <label>Book<select name="bookId" [(ngModel)]="loanForm.bookId" required>
+          <option value="">Select a book</option>
+          <option *ngFor="let book of availableBooks()" [value]="book.id">{{ book.title }} · {{ book.availableCopies }} available</option>
+        </select></label>
+        <label>Borrower name<input name="borrowerName" [(ngModel)]="loanForm.borrowerName" required maxlength="160" /></label>
+        <label>Due date<input type="datetime-local" name="dueDate" [(ngModel)]="loanForm.dueDate" required /></label>
+        <button type="submit" [disabled]="availableBooks().length === 0">Register loan</button>
+      </form>
+    </article>
+  </section>
+
+  <section class="panel catalog-panel">
+    <div class="panel-heading"><div><p class="eyebrow">INVENTORY</p><h2>Book catalog</h2></div><span class="count">{{ books.length }} items</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Title</th><th>Author</th><th>ISBN</th><th>Availability</th></tr></thead>
+      <tbody><tr *ngFor="let book of books"><td class="book-title">{{ book.title }}</td><td>{{ book.author }}</td><td>{{ book.isbn }}</td><td><span class="pill" [class.empty]="book.availableCopies === 0">{{ book.availableCopies }} / {{ book.totalCopies }}</span></td></tr>
+      <tr *ngIf="!books.length"><td colspan="4" class="empty-state">No books found. Add the first title above.</td></tr></tbody></table></div>
+  </section>
+
+  <section class="panel catalog-panel">
+    <div class="panel-heading"><div><p class="eyebrow">CIRCULATION</p><h2>Loans</h2></div><span class="count">{{ loans.length }} records</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Book</th><th>Borrower</th><th>Due date</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody><tr *ngFor="let loan of loans"><td class="book-title">{{ loan.bookTitle }}</td><td>{{ loan.borrowerName }}</td><td>{{ loan.dueDateUtc | date:'mediumDate' }}</td><td><span class="pill" [class.returned]="loan.isReturned">{{ loan.isReturned ? 'Returned' : 'On loan' }}</span></td><td><button class="button-secondary" *ngIf="!loan.isReturned" (click)="returnLoan(loan)">Return book</button><span *ngIf="loan.isReturned" class="muted">Complete</span></td></tr>
+      <tr *ngIf="!loans.length"><td colspan="5" class="empty-state">No loans have been registered yet.</td></tr></tbody></table></div>
+  </section>
+  <footer>BookFlow is a learning prototype. Use synthetic data only.</footer>
+</main>
