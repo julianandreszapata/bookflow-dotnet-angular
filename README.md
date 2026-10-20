@@ -1,68 +1,74 @@
 # BookFlow — .NET 8 + Angular 20
 
-A full-stack library lending and inventory demo. The backend separates domain rules, application use cases, persistence, and HTTP delivery. The Angular client consumes the REST API and lets a user create books, register loans, list loans, and return books.
+Aplicación de demostración para administrar un catálogo de biblioteca, controlar ejemplares disponibles y registrar préstamos y devoluciones. El objetivo del proyecto es mostrar cómo separar las reglas de negocio, los casos de uso, la persistencia y la entrega HTTP en una solución full stack.
 
-## Features
+> **Alcance:** proyecto personal de portafolio con datos ficticios. No es un sistema de biblioteca de producción. Ejecuta las pruebas y revisa los casos de uso en tu entorno antes de presentarlo como verificado.
 
-- List and register books with ISBN, author, and copy count.
-- Display available vs. total copies.
-- Create a loan only when a copy is available.
-- Return a loan once and restore the available-copy count.
-- Validate inputs and report business-rule errors as HTTP 400.
-- Persist demo data locally using SQLite through EF Core.
-- OpenAPI/Swagger interface for manual API verification.
+## Funcionalidades
 
-## Architecture
+- Consultar y registrar libros con título, autor, ISBN y cantidad de ejemplares.
+- Consultar el total de ejemplares y los que están disponibles.
+- Registrar un préstamo si existe un ejemplar disponible.
+- Registrar la devolución de un préstamo y actualizar la disponibilidad.
+- Validar datos de entrada y reglas de negocio.
+- Persistir los datos de demostración en SQLite mediante Entity Framework Core.
+- Explorar y probar la API desde Swagger/OpenAPI.
+
+## Tecnologías
+
+- **Backend:** .NET 8, ASP.NET Core Web API, C# y Entity Framework Core.
+- **Persistencia:** SQLite.
+- **Frontend:** Angular 20 y TypeScript.
+- **Pruebas:** proyecto de pruebas de dominio con .NET.
+
+## Arquitectura
 
 ```mermaid
-flowchart TB
-  UI[Angular 20 UI] --> API[ASP.NET Core API / Controllers]
-  API --> APP[Application Services / DTOs / Contracts]
-  APP --> DOMAIN[Domain: Book, Loan, Business Rules]
-  INFRA[Infrastructure: EF Core / SQLite Repositories] -. implements .-> APP
-  API --> INFRA
-  INFRA --> DB[(SQLite: bookflow.db)]
+flowchart TD
+  UI[Interfaz Angular] --> API[ASP.NET Core API / Controladores]
+  API --> APP[Application: servicios, DTO y contratos]
+  APP --> DOM[Domain: entidades y reglas de negocio]
+  INF[Infrastructure: EF Core y repositorios] -. implementa contratos .-> APP
+  INF --> DB[(SQLite)]
 ```
 
-### Layers and responsibilities
+### Responsabilidad de cada capa
 
-- `BookFlow.Domain`: entities and business invariants. It has no dependency on EF Core or HTTP.
-- `BookFlow.Application`: DTOs, repository contracts, unit-of-work contract, and application services.
-- `BookFlow.Infrastructure`: EF Core `DbContext`, SQLite setup, and repository implementations.
-- `BookFlow.Api`: controllers, dependency injection, Swagger, CORS, seed data, and exception-to-HTTP mapping.
-- `frontend/`: Angular standalone UI, API service, models, forms, and styles.
+- `BookFlow.Domain`: entidades y reglas del negocio. No depende de HTTP ni de EF Core.
+- `BookFlow.Application`: servicios de aplicación, DTO y contratos de repositorio.
+- `BookFlow.Infrastructure`: `DbContext`, configuración de SQLite e implementaciones de persistencia.
+- `BookFlow.Api`: controladores, inyección de dependencias, Swagger, CORS y conversión de errores a respuestas HTTP.
+- `frontend/`: interfaz Angular, modelos, formularios y servicio para consumir la API.
 
-This demonstrates separation of concerns and dependency inversion: application services depend on interfaces rather than directly constructing EF Core repositories.
+La inversión de dependencias se refleja en el uso de contratos: la capa de aplicación trabaja con abstracciones, mientras que la infraestructura implementa el acceso a datos.
 
-## Requirements
+## Requisitos
 
-- .NET SDK 8.0 for the requested target framework.
-- Node.js compatible with Angular 20: `^20.19.0`, `^22.12.0`, or `^24.0.0`; npm is included with Node.js.
-- A modern browser.
+- SDK de .NET 8.
+- Node.js compatible con Angular 20 y npm.
+- Navegador web moderno.
 
-**Version lifecycle note (19 Oct 2026):** .NET 8 support ends on 10 Nov 2026, and Angular 20 LTS ends on 28 Nov 2026. These versions are retained because the portfolio request explicitly targets .NET 8 and Angular 20. For a new project intended to remain maintained after those dates, plan an upgrade to a supported .NET LTS and Angular release, then rerun tests. See official lifecycle and compatibility references: https://learn.microsoft.com/en-us/dotnet/core/releases-and-support and https://angular.dev/reference/releases and https://angular.dev/reference/versions.
+> **Compatibilidad:** Angular 20 no funciona con Node.js 13. Si tu equipo aún muestra `v13.14.0`, actualiza Node antes de instalar las dependencias. Consulta la matriz oficial de compatibilidad de Angular: https://angular.dev/reference/versions. .NET 8 se acerca al fin de soporte previsto para noviembre de 2026; para mantener el proyecto después de esa fecha, planifica una actualización a una versión soportada y vuelve a ejecutar las pruebas.
 
-## Run the API
+## Cómo ejecutar el backend
 
-From the repository root:
+Desde la raíz del repositorio, abre PowerShell:
 
 ```powershell
 dotnet --version
-dotnet run --project .\backend\BookFlow.Api\BookFlow.Api.csproj
-```
-
-The API uses SQLite and creates `bookflow.db` in the API working directory on first start, then seeds example books if the database is empty. Open Swagger at the URL shown by ASP.NET Core, usually `http://localhost:5080/swagger` after setting the URL, or `https://localhost:7xxx/swagger` if HTTPS is selected.
-
-To pin the HTTP address for the Angular development client, run:
-
-```powershell
 $env:ASPNETCORE_URLS="http://localhost:5080"
 dotnet run --project .\backend\BookFlow.Api\BookFlow.Api.csproj
 ```
 
-## Run the Angular UI
+La aplicación configura SQLite y carga libros de ejemplo si la base de datos aún no contiene registros. Abre Swagger en:
 
-Open a second terminal in the repository root:
+`http://localhost:5080/swagger`
+
+Si la URL configurada por ASP.NET Core es distinta, utiliza la que muestre la consola. El archivo `bookflow.db` se genera en la ubicación de trabajo de la API; no es necesario subirlo a GitHub.
+
+## Cómo ejecutar el frontend
+
+Abre una segunda terminal en la raíz del repositorio:
 
 ```powershell
 cd .\frontend
@@ -70,23 +76,21 @@ npm install
 npm start
 ```
 
-Open http://localhost:4200. The Angular API service targets `http://localhost:5080/api`. If you change the backend port, update `frontend/src/app/core/bookflow-api.service.ts`.
+Abre `http://localhost:4200`. El servicio del frontend está configurado para consumir `http://localhost:5080/api`. Si modificas el puerto del backend, ajusta `frontend/src/app/core/bookflow-api.service.ts`.
 
-Because the user's existing Node.js version was previously `v13.14.0`, upgrade Node.js before installing Angular dependencies. Angular 20 does not support Node 13; use a version listed in the compatibility table above.
+## Endpoints principales
 
-## API endpoints
-
-| Method | Endpoint | Description |
+| Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/books` | List books |
-| GET | `/api/books/{id}` | Get one book |
-| POST | `/api/books` | Register a book |
-| GET | `/api/loans` | List loans |
-| GET | `/api/loans/{id}` | Get one loan |
-| POST | `/api/loans` | Create a loan |
-| PATCH | `/api/loans/{id}/return` | Return a loan |
+| `GET` | `/api/books` | Consultar libros |
+| `GET` | `/api/books/{id}` | Consultar un libro |
+| `POST` | `/api/books` | Registrar un libro |
+| `GET` | `/api/loans` | Consultar préstamos |
+| `GET` | `/api/loans/{id}` | Consultar un préstamo |
+| `POST` | `/api/loans` | Registrar un préstamo |
+| `PATCH` | `/api/loans/{id}/return` | Registrar una devolución |
 
-Example book request:
+Ejemplo para registrar un libro:
 
 ```json
 {
@@ -97,63 +101,55 @@ Example book request:
 }
 ```
 
-Example loan request:
+Ejemplo de préstamo (reemplaza el identificador por uno real devuelto por la API):
 
 ```json
 {
-  "bookId": "REPLACE_WITH_BOOK_GUID",
+  "bookId": "REEMPLAZAR_POR_GUID_DEL_LIBRO",
   "borrowerName": "Alex Rivera",
   "dueDateUtc": "2026-11-01T12:00:00Z"
 }
 ```
 
-## Business rules demonstrated
+## Reglas de negocio demostradas
 
-- Titles, authors, and ISBN are required.
-- Total copies must be greater than zero.
-- ISBN values must be unique in this demo.
-- A loan cannot be created without an available copy.
-- A due date must be in the future.
-- A loan cannot be returned twice.
-- Returning a loan restores the book's available count.
+- Título, autor e ISBN son obligatorios.
+- La cantidad total de ejemplares debe ser mayor que cero.
+- El ISBN debe ser único en la demostración.
+- No se puede prestar un libro sin unidades disponibles.
+- La fecha de devolución prevista debe ser futura.
+- Un préstamo no se puede devolver dos veces.
+- Al registrar una devolución se recupera una unidad disponible.
 
-## Clean Code / SOLID examples
+## SOLID y código limpio
 
-- **Single Responsibility:** controllers translate HTTP; services coordinate use cases; entities enforce state transitions; repositories manage persistence.
-- **Open/Closed:** persistence can be replaced behind repository interfaces without rewriting domain rules.
-- **Liskov Substitution / Interface Segregation:** small contracts define only the operations needed by each service.
-- **Dependency Inversion:** application services rely on interfaces, with implementations injected by the API composition root.
-- DTOs separate request/response models from persistence entities.
+- **Responsabilidad única (SRP):** los controladores manejan HTTP, los servicios coordinan casos de uso, las entidades protegen las reglas y los repositorios gestionan la persistencia.
+- **Inversión de dependencias (DIP):** los servicios trabajan con interfaces en lugar de instanciar directamente los repositorios EF Core.
+- **Abierto/cerrado (OCP):** la persistencia se puede sustituir detrás de los contratos sin reescribir las reglas del dominio.
+- Los DTO separan los modelos de solicitud/respuesta de las entidades de persistencia.
 
-## Automated tests
+## Ejecutar las pruebas
 
-The domain rule tests are included. Run them from the repository root:
+Desde la raíz:
 
 ```powershell
 dotnet test .\backend\BookFlow.Domain.Tests\BookFlow.Domain.Tests.csproj
 ```
 
-## Verification checklist
+## Lista de comprobación manual
 
-1. Start the API and open Swagger.
-2. `GET /api/books` returns seeded books.
-3. `POST /api/books` creates a new book.
-4. `POST /api/loans` with an available book creates a loan and decrements available copies.
-5. `PATCH /api/loans/{id}/return` marks the loan returned and increments available copies.
-6. Try to create a loan when available copies are zero; expect a business validation error.
-7. Try to return the same loan twice; expect a business validation error.
+1. Inicia la API y abre Swagger.
+2. Comprueba que `GET /api/books` devuelve los libros de ejemplo.
+3. Registra un libro con `POST /api/books`.
+4. Crea un préstamo para un libro con ejemplares disponibles.
+5. Devuelve el préstamo con `PATCH /api/loans/{id}/return`.
+6. Intenta prestar un libro sin unidades disponibles y verifica la validación.
+7. Intenta devolver dos veces el mismo préstamo y verifica que la operación se rechace.
 
-The project code is provided as a portfolio starter. Build and exercise it locally before telling a recruiter that all endpoints have been verified. No .NET SDK was available in the packaging environment, so an SDK build was not performed here.
+## Limitaciones y próximos pasos
 
-## Security and production gaps
+Esta versión no incluye autenticación/autorización, gestión de multas, control de concurrencia para préstamos simultáneos, telemetría de producción, pipeline CI/CD ni despliegue. Antes de usarla en un entorno real, habría que agregar migraciones, concurrencia optimista, pruebas de integración, controles de acceso y monitorización.
 
-This demo has no authentication/authorization, member identity verification, overdue fine rules, migration management, concurrency strategy for simultaneous loans, structured production telemetry, CI pipeline, or production deployment. It uses synthetic data only. These should be addressed before using it outside a portfolio demonstration.
+## Contexto del proyecto
 
-## Suggested improvements
-
-- Add xUnit tests for domain and application services.
-- Add EF Core migrations and optimistic concurrency control.
-- Add authentication and policy-based authorization.
-- Add pagination/search and an overdue-loan workflow.
-- Add GitHub Actions for build and tests.
-- Upgrade from .NET 8 and Angular 20 to supported versions, then re-run the complete test suite.
+Proyecto personal de portafolio para practicar y demostrar arquitectura por capas, separación de responsabilidades, reglas de negocio y desarrollo full stack. La versión publicada debe considerarse una demostración hasta completar la verificación local descrita arriba.
